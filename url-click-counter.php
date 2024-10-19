@@ -54,6 +54,12 @@
             <?php
         // Function to search for shorted links and original links
         function searchLinks($url) {
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $host = $_SERVER['HTTP_HOST'];
+            $baseURL = "$protocol://$host";
+            $currentURL = $_SERVER['REQUEST_URI'];
+            $currentURL = str_replace("index.php", "", $currentURL);
+            
             // Fetch click count from the urls.txt file
             $file = file("urls.txt", FILE_IGNORE_NEW_LINES);
             
@@ -62,8 +68,8 @@
                 $urlId = $data[0];
                 $mainUrl = $data[1];
                 $clickCount = $data[2];
-                
-                $shorturl = "http://localhost/urlshortner/?u=$urlId";
+
+                $shorturl = "$currentURL/?u=$urlId";
                 
                 if ($mainUrl === $url) {
                     return [

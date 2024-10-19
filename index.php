@@ -1,4 +1,11 @@
 <?php
+error_reporting(0);
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+$baseURL = "$protocol://$host";
+$currentURL = $_SERVER['REQUEST_URI'];
+$currentURL = str_replace("index.php", "", $currentURL);
+
 function generateRandomCode($length = 6) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $code = '';
@@ -6,6 +13,10 @@ function generateRandomCode($length = 6) {
         $code .= $characters[rand(0, strlen($characters) - 1)];
     }
     return $code;
+}
+
+function sanitizeURL($url) {
+    return filter_var($url, FILTER_SANITIZE_URL);
 }
 
 function saveShortURL($code, $url, $clickCount = 0) {
@@ -82,15 +93,19 @@ function isExistingLink($url) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $url =$_POST['url'];
+    $url = sanitizeURL($_POST['url']);
+    $url = filter_var($url, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED);
     if (isValidURL($url)) {
         $existingShortCode = isExistingLink($url);
         if ($existingShortCode) {
-            $shortURL = "http://localhost/urlshortner/?u=$existingShortCode";
+            // $shortURL = "http://localhost/urlshortner/?u=$existingShortCode";
+            $shortURL = $baseURL . $currentURL . "?u=$shortCode";
             $response = 'Short URL already exists for this link.';
         } else {
             $shortCode = generateRandomCode();
             saveShortURL($shortCode, $url);
-            $shortURL = "http://localhost/urlshortner/?u=$shortCode";
+            // $shortURL = "http://localhost/urlshortner/?u=$shortCode";
+            $shortURL = $baseURL . $currentURL . "?u=$shortCode";
             $response = 'Short URL created successfully.';
             addLinkToRecentCookie($shortURL, $url);
         }
